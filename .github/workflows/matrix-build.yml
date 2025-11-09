@@ -1,0 +1,47 @@
+name: Matrix Build with Artifacts (CA2E81A)
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build (Node v${{ matrix.node }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [18, 20, 22]   # >= 3 variants
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node ${{ matrix.node }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+
+      # Required identifier step
+      - name: matrix-ca2e81a
+        run: echo "Building for Node v${{ matrix.node }}"
+
+      - name: Generate build artifact
+        run: |
+          mkdir -p artifacts
+          cat << 'EOF' > artifacts/output-v${{ matrix.node }}.txt
+          Build output
+          Transaction: TXN-24F1002147-0979
+          Variant: Node v${{ matrix.node }}
+          Timestamp: $(date -u +'%Y-%m-%dT%H:%M:%SZ')
+          EOF
+
+      - name: Ensure artifact is non-empty
+        run: test -s "artifacts/output-v${{ matrix.node }}.txt"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-ca2e81a-v${{ matrix.node }}
+          path: artifacts/output-v${{ matrix.node }}.txt
+          if-no-files-found: error
